@@ -37,8 +37,12 @@ class ApplyLeaveView(APIView):
 
 
 class MyLeaveRequestView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self,request):
+        status_param = request.GET.get('status')
         leaves = LeaveRequest.objects.filter(user=request.user)
+        if status_param:
+            leaves = leaves.filter(status=status_param)
         serializer = LeaveRequestSerializer(leaves,many=True)
         return Response(serializer.data)
 
@@ -65,3 +69,10 @@ class RejectLeaveView(APIView):
             leave.status = 'rejected'
             leave.save()
             return Response({'message':'Leave Request Rejected Successfully'},status=status.HTTP_200_OK)
+        
+class AllLeaveRequestView(APIView):
+    permission_classes = [IsAuthenticated,IsManager]
+    def get(self,request):
+        leaves = LeaveRequest.objects.all()
+        serializer = LeaveRequestSerializer(leaves,many= True)
+        return Response(serializer.data)
